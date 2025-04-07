@@ -233,13 +233,16 @@ class CnAkE
   end
   
   def initialize
+    file = File.read("./test.txt")
+    @str = file
     @CnAkEParser = Parser.new("CnAkE") do
       token(/\s+/)
       token(/\d+/) {|m| m.to_i }
       token(/./) {|m| m }
       
       start :expr do 
-        match(:expr, '+', :term) {|a, _, b| a + b }
+        match(:func, :expr){|a,b|puts b}
+        match(:expr, '+', :term) {|a, _, b| puts (a + b) }
         match(:expr, '-', :term) {|a, _, b| a - b }
         match(:term)
       end
@@ -255,30 +258,24 @@ class CnAkE
         match(Integer)
         match('(', :expr, ')') {|_, a, _| a }
       end
+      rule :func do
+        match('p','r','i','n','t')
+      end
     end
   end
   
-  def done(str)
-    ["quit","exit","bye",""].include?(str.chomp)
+  def done(stri)
+    puts stri
+    ["quit","exit","bye",""].include?(stri.chomp)
   end
   
   def roll
     print "[CnAkE] "
-    file = File.read("./test.txt")
-    str = file
-    if done(str) then
+    if done(@str) then
       puts "Bye."
     else
-      puts "=> #{@CnAkEParser.parse str}"
-      roll
-    end
-  end
-
-  def log(state = true)
-    if state
-      @CnAkEParser.logger.level = Logger::DEBUG
-    else
-      @CnAkEParser.logger.level = Logger::WARN
+      puts "=> #{@CnAkEParser.parse @str}"
     end
   end
 end
+#Regex for fucntion:^([a-z]{3}) (func) ([a-z]+)(([a-z]{3}) ([a-z]+|\w+\w+),?\s?)
