@@ -239,10 +239,12 @@ class CnAkE
       token(/\s+/)
       token(/\d+/) {|m| m.to_i }
       token(/./) {|m| m }
-      
+      token(/([a-z]{3})\s([a-z]+)\s=\s(\d+.\d+|\d+|"[a-zA-z]+*"|[a-zA-Z]+)/) {|m| m}
+      var={}
       start :expr do 
         match(:func, :expr){|a,b|puts b}
-        match(:expr, '+', :term) {|a, _, b| puts (a + b) }
+        match(:vari, '=', :expr) {|a, _, b| var[a] = b}
+        match(:expr, '+', :term) {|a, _, b| a + b }
         match(:expr, '-', :term) {|a, _, b| a - b }
         match(:term)
       end
@@ -256,7 +258,13 @@ class CnAkE
         # Match the result of evaluating an integer expression, which
         # should be an Integer
         match(Integer)
+        match(String)
+        match('(','"', :atom,'"', ')') {|_, a, _| a }
         match('(', :expr, ')') {|_, a, _| a }
+      end
+      rule :vari do
+        match(String)
+        match('i','n','t', String)
       end
       rule :func do
         match('p','r','i','n','t')
