@@ -237,13 +237,17 @@ class CnAkE
     @str = file
     @CnAkEParser = Parser.new("CnAkE") do
       token(/\s+/)
-      token(/\d+/) {|m| m.to_i }
+      token(/int|str|chr|bol|pnt|lst/) { |m| m }  #Vaible keywords
+      token(/[a-zA-Z_][a-zA-Z0-9_]+/) {|m| m }    #Variable identifier
+      token(/\d+/) {|m| m.to_i }   
+      #token(/=/) {|m| m }   
       token(/./) {|m| m }
-      token(/([a-z]{3})\s([a-z]+)\s=\s(\d+.\d+|\d+|"[a-zA-z]+*"|[a-zA-Z]+)/) {|m| m}
+
       var={}
+      
       start :expr do 
-        match(:func, :expr){|a,b|puts b}
-        match(:vari, '=', :expr) {|a, _, b| var[a] = b}
+        match(:func, :expr){|a, b| puts b}
+        match(:type, :vari, '=', :expr) {|a, b, _, c| var[b] = c}
         match(:expr, '+', :term) {|a, _, b| a + b }
         match(:expr, '-', :term) {|a, _, b| a - b }
         match(:term)
@@ -258,16 +262,22 @@ class CnAkE
         # Match the result of evaluating an integer expression, which
         # should be an Integer
         match(Integer)
-        match(String)
+        match(String) {|a|var[a]}
         match('(','"', :atom,'"', ')') {|_, a, _| a }
         match('(', :expr, ')') {|_, a, _| a }
       end
       rule :vari do
         match(String)
-        match('i','n','t', String)
+      end
+      rule :type do
+        match('int')
+        # match('str')
+        # match('chr')
+        # match('bol')
+        # match('pnt')
       end
       rule :func do
-        match('p','r','i','n','t')
+        match('print')
       end
     end
   end
@@ -278,12 +288,19 @@ class CnAkE
   end
   
   def roll
-    print "[CnAkE] "
-    if done(@str) then
-      puts "Bye."
-    else
-      puts "=> #{@CnAkEParser.parse @str}"
+    File.open("./test.txt", "r") do |f|
+      f.each_line do |line|
+            print "[CnAkE] "
+            if done(line) then
+              puts "Bye."
+            else
+              puts "=> #{@CnAkEParser.parse line}"
+            end
+          end
     end
   end
 end
+
+
 #Regex for fucntion:^([a-z]{3}) (func) ([a-z]+)(([a-z]{3}) ([a-z]+|\w+\w+),?\s?)
+# token(/([a-z]{3})\s([a-z]+)\s=\s(\d+.\d+|\d+|"[a-zA-z]+*"|[a-zA-Z]+)/) {|m| m}
