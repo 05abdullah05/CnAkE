@@ -247,7 +247,17 @@ class CnAkE
       
       start :expr do 
         match(:func, :expr){|a, b| puts b}
-        match(:type, :vari, '=', :expr) {|a, b, _, c| var[b] = c}
+        match(:type, :vari, '=', :expr) {|a, b, _, c| case a
+      when "int"
+        puts "amongos"
+        var[b] = c.to_i
+      when "str"
+        var[b] = c.to_s
+      when "chr"
+        var[b] = c.to_s
+      else
+        var[b] = c
+      end}
         match(:expr, '+', :term) {|a, _, b| a + b }
         match(:expr, '-', :term) {|a, _, b| a - b }
         match(:term)
@@ -271,10 +281,10 @@ class CnAkE
       end
       rule :type do
         match('int')
-        # match('str')
-        # match('chr')
-        # match('bol')
-        # match('pnt')
+        match('str')
+        match('chr')
+        match('bol')
+        match('pnt')
       end
       rule :func do
         match('print')
