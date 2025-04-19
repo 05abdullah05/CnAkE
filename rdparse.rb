@@ -236,6 +236,7 @@ class CnAkE
     file = File.read("./test.txt")
     @str = file
     @CnAkEParser = Parser.new("CnAkE") do
+      token(/([a-z]{3})(func)([a-z]+)(([a-z]{3})([a-z]+))/)
       token(/\s+/)
       token(/int|str|chr|bol|pnt|lst/) { |m| m }  #Vaible keywords
       token(/[a-zA-Z_][a-zA-Z0-9_]+/) {|m| m }    #Variable identifier
@@ -244,9 +245,10 @@ class CnAkE
       token(/./) {|m| m }
 
       var={}
+      scope={}
       
       start :expr do 
-        match(:func, :expr){|a, b| puts b}
+        match(:basf, :expr){|a, b| puts b}
         match(:type, :vari, '=', :expr) {|a, b, _, c| case a
       when "int"
         puts "amongos"
@@ -286,7 +288,7 @@ class CnAkE
         match('bol')
         match('pnt')
       end
-      rule :func do
+      rule :basf do
         match('print')
       end
     end
