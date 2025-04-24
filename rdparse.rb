@@ -242,6 +242,10 @@ class CnAkE
       token(/[a-zA-Z_][a-zA-Z0-9_]+/) {|m| m }    #Variable identifier
       token(/\d+/) {|m| m.to_i }   
       #token(/=/) {|m| m }   
+      token(/\*\*/) { '**' }        
+      token(/\+=/)  { '+=' }
+      token(/-=/)   { '-=' }
+      token(/\*\*=/){ '**=' }
       token(/./) {|m| m }
 
       var={}
@@ -266,17 +270,31 @@ class CnAkE
       end
       
       rule :term do 
-        match(:term, '*', :atom) {|a, _, b| a * b }
-        match(:term, '/', :atom) {|a, _, b| a / b }
+        # match(:term, '*', :atom) {|a, _, b| a * b }
+        # match(:term, '/', :atom) {|a, _, b| a / b }
+        # match(:atom)
+        match(:term, '*', :factor) { |a, _, b| a * b }
+        match(:term, '/', :factor) { |a, _, b| a / b }
+        match(:term, '%', :factor) { |a, _, b| a % b }
+        match(:factor)
+      end
+
+      rule :factor do
+        match(:factor, '**', :atom) { |a, _, b| a ** b }
         match(:atom)
       end
+
+
       rule :atom do
         # Match the result of evaluating an integer expression, which
         # should be an Integer
-        match(Integer)
-        match(String) {|a|var[a]}
-        match('(','"', :atom,'"', ')') {|_, a, _| a }
-        match('(', :expr, ')') {|_, a, _| a }
+        # match(Integer)
+        # match(String) {|a|var[a]}
+        # match('(','"', :atom,'"', ')') {|_, a, _| a }
+        # match('(', :expr, ')') {|_, a, _| a }
+        match(Integer)                   # numbers
+        match(String) { |name| var[name] }  # variable lookup
+        match('(', :expr, ')') { |_, e, _| e }  # parentheses
       end
       rule :vari do
         match(String)

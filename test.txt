@@ -1,2 +1,2 @@
-int a = 12
-print a
+int x = 2 + 3 * 4
+print x
