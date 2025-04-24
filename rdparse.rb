@@ -241,7 +241,7 @@ class CnAkE
       token(/int|str|chr|bol|pnt|lst/) { |m| m }  #Vaible keywords
       token(/[a-zA-Z_][a-zA-Z0-9_]+/) {|m| m }    #Variable identifier
       token(/\d+/) {|m| m.to_i }   
-      #token(/=/) {|m| m }   
+      token(/=/) {|m| m }   
       token(/\*\*/) { '**' }        
       token(/\+=/)  { '+=' }
       token(/-=/)   { '-=' }
@@ -266,39 +266,41 @@ class CnAkE
       end}
         match(:expr, '+', :term) {|a, _, b| a + b }
         match(:expr, '-', :term) {|a, _, b| a - b }
+        match(:vari, '+=', :term) {|a, _, b| var[a] = var[a] + b }
+        match(:vari, '-=', :term) {|a, _, b| var[a] = var[a] - b }
         match(:term)
       end
       
       rule :term do 
         # match(:term, '*', :atom) {|a, _, b| a * b }
         # match(:term, '/', :atom) {|a, _, b| a / b }
-        # match(:atom)
         match(:term, '*', :factor) { |a, _, b| a * b }
         match(:term, '/', :factor) { |a, _, b| a / b }
         match(:term, '%', :factor) { |a, _, b| a % b }
+        match(:vari, '*=', :term) { |a, _, b| var[a] = var[a] *= b }
+        match(:vari, '/=', :term) { |a, _, b| var[a] = var[a] /= b }
+        match(:vari, '%=', :term) { |a, _, b| var[a] = var[a] %= b }
         match(:factor)
       end
 
       rule :factor do
         match(:factor, '**', :atom) { |a, _, b| a ** b }
+        match(:vari, '**=', :atom) { |a, _, b| var[a] = var[a] **= b }
         match(:atom)
       end
 
-
       rule :atom do
-        # Match the result of evaluating an integer expression, which
-        # should be an Integer
-        # match(Integer)
-        # match(String) {|a|var[a]}
+        # Match the result of evaluating an integer expression, which should be an Integer
         # match('(','"', :atom,'"', ')') {|_, a, _| a }
-        # match('(', :expr, ')') {|_, a, _| a }
         match(Integer)                   # numbers
         match(String) { |name| var[name] }  # variable lookup
         match('(', :expr, ')') { |_, e, _| e }  # parentheses
       end
+
       rule :vari do
         match(String)
       end
+
       rule :type do
         match('int')
         match('str')
@@ -306,6 +308,7 @@ class CnAkE
         match('bol')
         match('pnt')
       end
+      
       rule :basf do
         match('print')
       end
