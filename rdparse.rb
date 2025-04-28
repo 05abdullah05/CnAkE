@@ -261,7 +261,7 @@ class CnAkE
       scope={}
       
       start :expr do 
-        match(:basf, :expr){|a, b| puts b}
+        match(:basf, :expr){|a, b| print b}
         match(:type, :vari, '=', :expr) {|a, b, _, c| case a
       when "int"
         puts "amongos"
@@ -283,7 +283,15 @@ class CnAkE
         match(:expr, '<', :expr)  { |a, _, b| a < b }
         match(:expr, '>=', :expr) { |a, _, b| a >= b }
         match(:expr, '<=', :expr) { |a, _, b| a <= b }
+        match('lst', :vari, '=', :cage) {|a,b,c,d|var[b] = d}
         match(:term)
+      end
+      rule :cage do
+        match(:list)
+      end
+      rule :list do
+        match(:list,',',:atom) {|a, _, b| a + [b]}
+        match(:atom) {|a| [a]}
       end
       
       rule :term do 
