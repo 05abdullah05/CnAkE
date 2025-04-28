@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 
+# THIS VERIONS WORKS FOR AIRTHMETIC, ASSIGNMENT OPERATORS!
 # This file is called rdparse.rb because it implements a Recursive
 # Descent Parser. Read more about the theory on e.g.
 # http://en.wikipedia.org/wiki/Recursive_descent_parser
@@ -236,6 +237,8 @@ class CnAkE
     file = File.read("./test.txt")
     @str = file
     @CnAkEParser = Parser.new("CnAkE") do
+      
+      # ==Tokens==
       token(/([a-z]{3})(func)([a-z]+)(([a-z]{3})([a-z]+))/)
       token(/\s+/)
       token(/int|str|chr|bol|pnt|lst/) { |m| m }  #Vaible keywords
@@ -260,6 +263,8 @@ class CnAkE
       var={}
       scope={}
       
+      
+      # ==Start==
       start :expr do 
         match(:basf, :expr){|a, b| puts b}
         match(:type, :vari, '=', :expr) {|a, b, _, c| case a
@@ -304,14 +309,14 @@ class CnAkE
         match(:atom)
       end
 
-      rule :compare do
-        match(:expr, '==', :expr) { |a, _, b| a == b }
-        match(:expr, '!=', :expr) { |a, _, b| a != b }
-        match(:expr, '>', :expr)  { |a, _, b| a > b }
-        match(:expr, '<', :expr)  { |a, _, b| a < b }
-        match(:expr, '>=', :expr) { |a, _, b| a >= b }
-        match(:expr, '<=', :expr) { |a, _, b| a <= b }
-      end
+      # rule :compare do
+      #   match(:expr, '==', :expr) { |a, _, b| a == b }
+      #   match(:expr, '!=', :expr) { |a, _, b| a != b }
+      #   match(:expr, '>', :expr)  { |a, _, b| a > b }
+      #   match(:expr, '<', :expr)  { |a, _, b| a < b }
+      #   match(:expr, '>=', :expr) { |a, _, b| a >= b }
+      #   match(:expr, '<=', :expr) { |a, _, b| a <= b }
+      # end
 
       rule :atom do
         # Match the result of evaluating an integer expression, which should be an Integer
