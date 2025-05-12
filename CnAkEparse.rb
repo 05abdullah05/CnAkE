@@ -228,7 +228,7 @@ end
 
 class CnAkE
         
-  def CnAkE.roll(times, sides)
+  def CnAkE.slither(times, sides)
     (1..times).inject(0) {|sum, _| sum + rand(sides) + 1 }
   end
   
@@ -264,7 +264,6 @@ class CnAkE
         match(:basf, :expr){|a, b| print b}
         match(:type, :vari, '=', :expr) {|a, b, _, c| case a
       when "int"
-        puts "amongos"
         var[b] = c.to_i
       when "str"
         var[b] = c.to_s
@@ -273,21 +272,33 @@ class CnAkE
       else
         var[b] = c
       end}
-        match(:expr, '+', :term)  {|a, _, b| a + b }
-        match(:expr, '-', :term)  {|a, _, b| a - b }
-        match(:vari, '+=', :term) {|a, _, b| var[a] += b }
-        match(:vari, '-=', :term) {|a, _, b| var[a] -= b }
-        match(:expr, '==', :expr) { |a, _, b| a == b }
-        match(:expr, '!=', :expr) { |a, _, b| a != b }
-        match(:expr, '>', :expr)  { |a, _, b| a > b }
-        match(:expr, '<', :expr)  { |a, _, b| a < b }
-        match(:expr, '>=', :expr) { |a, _, b| a >= b }
-        match(:expr, '<=', :expr) { |a, _, b| a <= b }
+        match(:expr, :op, :term)  {|a, _, b| a + b }
+        match(:expr, :op, :term)  {|a, _, b| a - b }
+        match(:vari, :op, :term) {|a, _, b| var[a] += b }
+        match(:vari, :op, :term) {|a, _, b| var[a] -= b }
+        match(:expr, :op, :expr) { |a, _, b| a == b }
+        match(:expr, :op, :expr) { |a, _, b| a != b }
+        match(:expr, :op, :expr)  { |a, _, b| a > b }
+        match(:expr, :op, :expr)  { |a, _, b| a < b }
+        match(:expr, :op, :expr) { |a, _, b| a >= b }
+        match(:expr, :op, :expr) { |a, _, b| a <= b }
         match('lst', :vari, '=', :cage) {|a,b,c,d|var[b] = d}
         match(:term)
       end
       rule :cage do
         match(:list)
+      end
+      rule :op do
+        match('+')
+        match('-')
+        match('-=')
+        match('+=')
+        match('==')
+        match('!=')
+        match('>')
+        match('<')
+        match('>=')
+        match('<=')
       end
       rule :list do
         match(:list,',',:atom) {|a, _, b| a + [b]}
@@ -352,17 +363,19 @@ class CnAkE
     ["quit","exit","bye",""].include?(stri.chomp)
   end
   
-  def roll
-    File.open("./test.txt", "r") do |f|
-      f.each_line do |line|
+  def slither
+    #File.open("./test.txt", "r") do |f|
+      #f.each_line do |line|
             print "[CnAkE] "
+            line = gets
             if done(line) then
               puts "Bye."
             else
               puts "=> #{@CnAkEParser.parse line}"
+              slither
             end
-          end
-    end
+          #end
+    #end
   end
 end
 
