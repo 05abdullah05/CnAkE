@@ -1,6 +1,7 @@
 int x = 5
+int y = 10
 print x
-x **= 3
-print x
-lst a = 1,2,3
-print a
+if (x > y);
+else_if (x == y);
+else;
+print y

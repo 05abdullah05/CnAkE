@@ -201,33 +201,35 @@ class Parser
   def token(pattern, &block)
     @lex_tokens << LexToken.new(Regexp.new('\\A' + pattern.source), block)
   end
-  
+
   def start(name, &block)
+    raise "Start rule #{name} must be defined with a block" unless block_given?
     rule(name, &block)
     @start = @rules[name]
+    raise "Start rule '#{name}' was not properly registered" unless @start
   end
-  
-  def rule(name,&block)
+    
+    
+  def rule(name, &block)
+    raise "Missing block for rule: #{name}" unless block_given?
     @current_rule = Rule.new(name, self)
     @rules[name] = @current_rule
-    instance_eval &block
+    instance_eval(&block)
     @current_rule = nil
-  end
+  end  
   
   def match(*pattern, &block)
     @current_rule.send(:match, *pattern, &block)
   end
 
 end
-
 ##############################################################################
-#
+
 # This part defines the CnAkE language
-#
-##############################################################################
 
+##############################################################################
 class CnAkE
-  def self.slither(times, sides)
+  def self.roll(times, sides)
     (1..times).inject(0) { |sum, _| sum + rand(sides) + 1 }
   end
   def initialize
@@ -340,7 +342,7 @@ class CnAkE
     ["quit", "exit", "bye", ""].include?(stri.chomp)
   end
 
-  def slither
+  def roll
     File.open("./test.txt", "r") do |f|
       f.each_line do |line|
         print "[CnAkE] "
@@ -353,6 +355,3 @@ class CnAkE
     end
   end
 end
-
-#Regex for fucntion:^([a-z]{3}) (func) ([a-z]+)(([a-z]{3}) ([a-z]+|\w+\w+),?\s?)
-# token(/([a-z]{3})\s([a-z]+)\s=\s(\d+.\d+|\d+|"[a-zA-z]+*"|[a-zA-Z]+)/) {|m| m}
