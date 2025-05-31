@@ -264,8 +264,13 @@ class CnAkE
           |_, _, init, _, cond, _, incr, _, _| puts "For_loop: #{init}, #{cond}, #{incr}"}
         match('while_loop', '(', :expr, ')', ';') { |_, _, cond, _, _| puts "While_loop: #{cond}" }
         match('do', ';'){ |_| puts "Do_loop" }
+        
         match('print', :expr){ |_, e| puts e }
-        match(:expr)                              
+        match(:function) {|a| puts a}
+        match(:expr)                           
+      end
+      rule :function do
+        match(:type, 'func', :vari,'(',:expr,')') {|_, _, _, _, a,_| a}
       end
 
       rule :expr do
@@ -319,6 +324,10 @@ class CnAkE
       rule :list do
         match(:list, ',', :atom) { |a, _, b| a + [b] }
         match(:atom) { |a| [a] }
+      end
+      rule :vars do
+        match(:vars, ',', :atom)
+        match(:atom)
       end
 
       rule :vari do

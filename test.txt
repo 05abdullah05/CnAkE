@@ -5,3 +5,4 @@ if (x > y);
 else_if (x == y);
 else;
 print y
+int func hello(y)
