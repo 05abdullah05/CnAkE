@@ -201,35 +201,33 @@ class Parser
   def token(pattern, &block)
     @lex_tokens << LexToken.new(Regexp.new('\\A' + pattern.source), block)
   end
-
+  
   def start(name, &block)
-    raise "Start rule #{name} must be defined with a block" unless block_given?
     rule(name, &block)
     @start = @rules[name]
-    raise "Start rule '#{name}' was not properly registered" unless @start
   end
-    
-    
-  def rule(name, &block)
-    raise "Missing block for rule: #{name}" unless block_given?
+  
+  def rule(name,&block)
     @current_rule = Rule.new(name, self)
     @rules[name] = @current_rule
-    instance_eval(&block)
+    instance_eval &block
     @current_rule = nil
-  end  
+  end
   
   def match(*pattern, &block)
     @current_rule.send(:match, *pattern, &block)
   end
 
 end
-##############################################################################
 
+##############################################################################
+#
 # This part defines the CnAkE language
-
+#
 ##############################################################################
+
 class CnAkE
-  def self.roll(times, sides)
+  def self.slither(times, sides)
     (1..times).inject(0) { |sum, _| sum + rand(sides) + 1 }
   end
   def initialize
@@ -266,8 +264,13 @@ class CnAkE
           |_, _, init, _, cond, _, incr, _, _| puts "For_loop: #{init}, #{cond}, #{incr}"}
         match('while_loop', '(', :expr, ')', ';') { |_, _, cond, _, _| puts "While_loop: #{cond}" }
         match('do', ';'){ |_| puts "Do_loop" }
+        
         match('print', :expr){ |_, e| puts e }
-        match(:expr)                              
+        match(:function) {|a| puts a}
+        match(:expr)                           
+      end
+      rule :function do
+        match(:type, 'func', :vari,'(',:expr,')') {|_, _, _, _, a,_| a}
       end
 
       rule :expr do
@@ -322,6 +325,10 @@ class CnAkE
         match(:list, ',', :atom) { |a, _, b| a + [b] }
         match(:atom) { |a| [a] }
       end
+      rule :vars do
+        match(:vars, ',', :atom)
+        match(:atom)
+      end
 
       rule :vari do
         match(String)
@@ -342,7 +349,7 @@ class CnAkE
     ["quit", "exit", "bye", ""].include?(stri.chomp)
   end
 
-  def roll
+  def slither
     File.open("./test.txt", "r") do |f|
       f.each_line do |line|
         print "[CnAkE] "
@@ -355,3 +362,9 @@ class CnAkE
     end
   end
 end
+
+#Regex for fucntion:^([a-z]{3}) (func) ([a-z]+)(([a-z]{3}) ([a-z]+|\w+\w+),?\s?)
+# token(/([a-z]{3})\s([a-z]+)\s=\s(\d+.\d+|\d+|"[a-zA-z]+*"|[a-zA-Z]+)/) {|m| m}
+
+# Run the parser
+CnAkE.new.slither
