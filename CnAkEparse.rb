@@ -1,14 +1,5 @@
 #!/usr/bin/env ruby
 
-# This file is called rdparse.rb because it implements a Recursive
-# Descent Parser. Read more about the theory on e.g.
-# http://en.wikipedia.org/wiki/Recursive_descent_parser
-
-# 2010-02-11 New version of this file for the 2010 instance of TDP007
-#   which handles false return values during parsing, and has an easy way
-#   of turning on and off debug messages.
-# 2014-02-16 New version that handles { false } blocks and :empty tokens.
-
 require 'logger'
 
 class ASTNode
@@ -21,7 +12,7 @@ class AssignStmt < ASTNode
   attr_reader :type, :name, :value
 
   def initialize(type, name, value)
-    @type = type      # can be nil for non-declaration assignment
+    @type = type      
     @name = name
     @value = value
   end
@@ -88,10 +79,15 @@ class NumberLiteral < ASTNode
     @value = value
   end
 
+  def eval(env)
+    @value
+  end
+
   def inspect
     "Number(#{@value})"
   end
 end
+
 class VariableRef < ASTNode
   attr_reader :name
 
@@ -99,10 +95,15 @@ class VariableRef < ASTNode
     @name = name
   end
 
+  def eval(env)
+    env[@name]
+  end
+
   def inspect
     "Var(#{@name})"
   end
 end
+
 class BinaryExpr < ASTNode
   attr_reader :left, :op, :right
 
@@ -110,6 +111,27 @@ class BinaryExpr < ASTNode
     @left = left
     @op = op
     @right = right
+  end
+
+  def eval(env)
+    l = @left.eval(env)
+    r = @right.eval(env)
+
+    case @op
+    when "+" then l + r
+    when "-" then l - r
+    when "*" then l * r
+    when "/" then l / r
+    when "%" then l % r
+    when "**" then l ** r
+
+    when "==" then l == r
+    when "!=" then l != r
+    when ">" then l > r
+    when "<" then l < r
+    when ">=" then l >= r
+    when "<=" then l <= r
+    end
   end
 
   def inspect
@@ -123,10 +145,8 @@ class Rule
   
   def initialize(name, parser)
     @logger = parser.logger
-    # The name of the expressions this rule matches
     @name = name
-    # We need the parser to recursively parse sub-expressions occurring 
-    # within the pattern of the match objects associated with this rule
+    # We need the parser to recursively parse sub-expressions occurring within the pattern of the match objects associated with this rule
     @parser = parser
     @matches = []
     # Left-recursive matches
@@ -147,7 +167,6 @@ class Rule
   end
   
   def parse
-    # Try non-left-recursive matches first, to avoid infinite recursion
     match_result = try_matches(@matches)
     return nil if match_result.nil?
     loop do
@@ -168,12 +187,9 @@ class Rule
       # pre_result is a previously available result from evaluating expressions
       result = pre_result.nil? ? [] : [pre_result]
 
-      # We iterate through the parts of the pattern, which may be e.g.
-      #   [:expr,'*',:term]
       match.pattern.each_with_index do |token,index|
         
-        # If this "token" is a compound term, add the result of
-        # parsing it to the "result" array
+        # If this "token" is a compound term, add the result of parsing it to the "result" array
         if @parser.rules[token]
           result << @parser.rules[token].parse
           if result.last.nil?
@@ -466,7 +482,8 @@ class CnAkE
     File.open("./test.txt", "r") do |f|
       f.each_line do |line|
         print "[CnAkE] "
-        puts "=> #{@CnAkEParser.parse(line)}"
+        program = @CnAkEParser.parse(line)
+        program.eval
       end
     end
   end
