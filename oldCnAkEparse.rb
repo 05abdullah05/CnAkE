@@ -1,14 +1,25 @@
 #!/usr/bin/env ruby
+
+# This file is called rdparse.rb because it implements a Recursive
+# Descent Parser. Read more about the theory on e.g.
+# http://en.wikipedia.org/wiki/Recursive_descent_parser
+
+# 2010-02-11 New version of this file for the 2010 instance of TDP007
+#   which handles false return values during parsing, and has an easy way
+#   of turning on and off debug messages.
+# 2014-02-16 New version that handles { false } blocks and :empty tokens.
+
 require 'logger'
-require './ast.rb'
 
 class Rule
   Match = Struct.new :pattern, :block
   
   def initialize(name, parser)
     @logger = parser.logger
+    # The name of the expressions this rule matches
     @name = name
-    # We need the parser to recursively parse sub-expressions occurring within the pattern of the match objects associated with this rule
+    # We need the parser to recursively parse sub-expressions occurring 
+    # within the pattern of the match objects associated with this rule
     @parser = parser
     @matches = []
     # Left-recursive matches
@@ -29,6 +40,7 @@ class Rule
   end
   
   def parse
+    # Try non-left-recursive matches first, to avoid infinite recursion
     match_result = try_matches(@matches)
     return nil if match_result.nil?
     loop do
@@ -49,9 +61,12 @@ class Rule
       # pre_result is a previously available result from evaluating expressions
       result = pre_result.nil? ? [] : [pre_result]
 
+      # We iterate through the parts of the pattern, which may be e.g.
+      #   [:expr,'*',:term]
       match.pattern.each_with_index do |token,index|
         
-        # If this "token" is a compound term, add the result of parsing it to the "result" array
+        # If this "token" is a compound term, add the result of
+        # parsing it to the "result" array
         if @parser.rules[token]
           result << @parser.rules[token].parse
           if result.last.nil?
@@ -206,26 +221,24 @@ class Parser
 end
 
 ##############################################################################
+#
 # This part defines the CnAkE language
 #
 ##############################################################################
+
 class CnAkE
   def self.slither(times, sides)
     (1..times).inject(0) { |sum, _| sum + rand(sides) + 1 }
   end
-
   def initialize
-
+    file = File.read("./test.txt")
+    @str = file
     @CnAkEParser = Parser.new("CnAkE") do
-
-      # ---------------- TOKENS ----------------
-
       token(/([a-z]{3})(func)([a-z]+)(([a-z]{3})([a-z]+))/)
       token(/\s+/)
       token(/int|str|chr|bol|pnt|lst|if|else_if|else|for_loop|while_loop|do/) { |m| m }
       token(/[a-zA-Z_][a-zA-Z0-9_]+/) { |m| m }
       token(/\d+/) { |m| m.to_i }
-
       token(/\*\*=/) { '**=' }
       token(/\*\*/)  { '**' }
       token(/\+=/)   { '+=' }
@@ -233,7 +246,6 @@ class CnAkE
       token(/\*=/)   { '*=' }
       token(/\/=/)   { '/=' }
       token(/%=/)    { '%=' }
-
       token(/==/)    { '==' }
       token(/!=/)    { '!=' }
       token(/>=/)    { '>=' }
@@ -241,83 +253,64 @@ class CnAkE
       token(/>/)     { '>' }
       token(/</)     { '<' }
       token(/=/)     { '=' }
-      token(/;/)     { ';' }
-
       token(/./)     { |m| m }
       
-      # ---------------- PROGRAM STRUCTURE ----------------
-
-      start :program do
-        match(:statements) { |s| Program.new(s) }
+      var = {}
+      start :statement do
+        match('if', '(', :expr, ')', ';'){ |_, _, cond, _, _| puts "If: #{cond}" }
+        match('else_if', '(', :expr, ')', ';'){ |_, _, cond, _, _| puts "Else_if: #{cond}" }
+        match('else', ';'){ |_| puts "ELSE" }
+        match('for_loop', '(', :expr, ';', :expr, ';', :expr, ')', ';') {
+          |_, _, init, _, cond, _, incr, _, _| puts "For_loop: #{init}, #{cond}, #{incr}"}
+        match('while_loop', '(', :expr, ')', ';') { |_, _, cond, _, _| puts "While_loop: #{cond}" }
+        match('do', ';'){ |_| puts "Do_loop" }
+        match('print', :expr){ |_, e| puts e }
+        match(:expr)                              
       end
-
-      rule :statements do
-        match(:statements, :statement) { |a, b| a + [b] }
-        match(:statement) { |s| [s] }
-      end
-
-      rule :statement do
-        match("print", :expr, ";") { |_, e, _| PrintStmt.new(e) }
-        match(:expr, ";")          { |e, _| ExprStmt.new(e, var) }
-      end
-
-      # ---------------- EXPRESSIONS ----------------
 
       rule :expr do
-
-        # variable declaration assignment
-        match(:type, :vari, '=', :expr) do |type, name, _, value|
-          AssignStmt.new(type, name, value)
-        end
-
-        # list assignment
-        match('lst', :vari, '=', :cage) do |_, name, _, values|
-          ListAssignStmt.new(name, values)
-        end
-
-        # binary operators
-        match(:expr, '+', :term)  { |a, _, b| BinaryExpr.new(a, "+", b) }
-        match(:expr, '-', :term)  { |a, _, b| BinaryExpr.new(a, "-", b) }
-
-        match(:expr, '==', :expr) { |a, _, b| BinaryExpr.new(a, "==", b) }
-        match(:expr, '!=', :expr) { |a, _, b| BinaryExpr.new(a, "!=", b) }
-        match(:expr, '>=', :expr) { |a, _, b| BinaryExpr.new(a, ">=", b) }
-        match(:expr, '<=', :expr) { |a, _, b| BinaryExpr.new(a, "<=", b) }
-        match(:expr, '>', :expr)  { |a, _, b| BinaryExpr.new(a, ">", b) }
-        match(:expr, '<', :expr)  { |a, _, b| BinaryExpr.new(a, "<", b) }
-
-        # compound assignment
-        match(:vari, '+=', :term) { |name, _, value| CompoundAssignStmt.new(name, "+=", value) }
-        match(:vari, '-=', :term) { |name, _, value| CompoundAssignStmt.new(name, "-=", value) }
-
+        match(:type, :vari, '=', :expr) { |a, b, _, c|
+          var[b] = case a
+          when "int" then c.to_i
+          when "str", "chr" then c.to_s
+          else c
+          end
+        }
+        match('lst', :vari, '=', :cage) { |_, b, _, d| var[b] = d }
+        match(:expr, '+', :term)  { |a, _, b| a + b }
+        match(:expr, '-', :term)  { |a, _, b| a - b }
+        match(:expr, '==', :expr) { |a, _, b| a == b }
+        match(:expr, '!=', :expr) { |a, _, b| a != b }
+        match(:expr, '>=', :expr) { |a, _, b| a >= b }
+        match(:expr, '<=', :expr) { |a, _, b| a <= b }
+        match(:expr, '>', :expr)  { |a, _, b| a > b }
+        match(:expr, '<', :expr)  { |a, _, b| a < b }
+        match(:vari, '+=', :term) { |a, _, b| var[a] += b }
+        match(:vari, '-=', :term) { |a, _, b| var[a] -= b }
         match(:term)
       end
 
       rule :term do
-        match(:term, '*', :factor) { |a, _, b| BinaryExpr.new(a, "*", b) }
-        match(:term, '/', :factor) { |a, _, b| BinaryExpr.new(a, "/", b) }
-        match(:term, '%', :factor) { |a, _, b| BinaryExpr.new(a, "%", b) }
-
-        match(:vari, '*=', :term)  { |name, _, value| CompoundAssignStmt.new(name, "*=", value) }
-        match(:vari, '/=', :term)  { |name, _, value| CompoundAssignStmt.new(name, "/=", value) }
-        match(:vari, '%=', :term)  { |name, _, value| CompoundAssignStmt.new(name, "%=", value) }
-
+        match(:term, '*', :factor) { |a, _, b| a * b }
+        match(:term, '/', :factor) { |a, _, b| a / b }
+        match(:term, '%', :factor) { |a, _, b| a % b }
+        match(:vari, '*=', :term)  { |a, _, b| var[a] *= b }
+        match(:vari, '/=', :term)  { |a, _, b| var[a] /= b }
+        match(:vari, '%=', :term)  { |a, _, b| var[a] %= b }
         match(:factor)
       end
 
       rule :factor do
-        match(:factor, '**', :atom) { |a, _, b| BinaryExpr.new(a, "**", b) }
-        match(:vari, '**=', :atom)  { |name, _, value| CompoundAssignStmt.new(name, "**=", value) }
+        match(:factor, '**', :atom) { |a, _, b| a ** b }
+        match(:vari, '**=', :atom)  { |a, _, b| var[a] **= b }
         match(:atom)
       end
 
       rule :atom do
-        match(Integer) { |n| NumberLiteral.new(n) }
-        match(String)  { |name| VariableRef.new(name) }
+        match(Integer)
+        match(String) { |name| var[name] }
         match('(', :expr, ')') { |_, e, _| e }
       end
-
-      # ---------------- LISTS ----------------
 
       rule :cage do
         match(:list)
@@ -342,13 +335,20 @@ class CnAkE
     end
   end
 
+  def done(stri)
+    puts stri
+    ["quit", "exit", "bye", ""].include?(stri.chomp)
+  end
+
   def slither
-    var = {}
     File.open("./test.txt", "r") do |f|
       f.each_line do |line|
         print "[CnAkE] "
-        program = @CnAkEParser.parse(line)
-        program.eval
+        if done(line)
+          puts "Bye."
+        else
+          puts "=> #{@CnAkEParser.parse line}"
+        end
       end
     end
   end
