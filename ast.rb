@@ -17,7 +17,6 @@ class AssignStmt < ASTNode
     env[@name] = @value.eval(env)
     puts "Assigned #{env[@name]} to variable '#{@name}' of type '#{@type}'"
     puts env
-    return env
   end
 
 end
