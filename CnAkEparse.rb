@@ -258,7 +258,7 @@ class CnAkE
 
       rule :statement do
         match("print", :expr, ";") { |_, e, _| PrintStmt.new(e) }
-        match(:expr, ";")          { |e, _| ExprStmt.new(e, var) }
+        match(:expr, ";")          { |e, _| ExprStmt.new(e) }
       end
 
       # ---------------- EXPRESSIONS ----------------
@@ -343,12 +343,15 @@ class CnAkE
   end
 
   def slither
-    var = {}
+    env ={}
     File.open("./test.txt", "r") do |f|
       f.each_line do |line|
+
         print "[CnAkE] "
         program = @CnAkEParser.parse(line)
-        program.eval
+        puts "här händer grejer"
+        program.eval(env)
+        puts "heres where the magic happens"
       end
     end
   end
