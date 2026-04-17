@@ -52,7 +52,6 @@ class Rule
 
   private
   
-  # Try out all matching patterns of this rule
   def try_matches(matches, pre_result = nil)
     match_result = nil
     # Begin at the current position in the input string of the parser
