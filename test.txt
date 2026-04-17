@@ -1,0 +1,4 @@
+if (1 > 2) print 5; else print 9;
+int funny = 2;
+print "funny";
+#smile
