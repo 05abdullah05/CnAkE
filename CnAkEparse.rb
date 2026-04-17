@@ -106,6 +106,7 @@ class Parser
 
   def initialize(language_name, &block)
     @logger = Logger.new(STDOUT)
+    @logger.level = Logger::WARN
     @lex_tokens = []
     @rules = {}
     @start = nil
@@ -127,7 +128,8 @@ class Parser
           @logger.debug("Token #{match[0]} consumed")
           # Also, evaluate this expression by using the block
           # associated with the token
-          @tokens << tok.block.call(match.to_s) if tok.block
+          token_value = tok.block ? tok.block.call(match.to_s) : match.to_s
+          @tokens << token_value unless token_value.nil?
           # consume the match and proceed with the rest of the string
           string = match.post_match
           true
