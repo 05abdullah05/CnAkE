@@ -12,8 +12,8 @@ class CnAkE
 
       token(/([a-z]{3})(func)([a-z]+)(([a-z]{3})([a-z]+))/)
       token(/\s+/)
-      token(/int|str|chr|bol|pnt|lst|if|else_if|else|for_loop|while_loop|do/) { |m| m }
-      token(/[a-zA-Z_][a-zA-Z0-9_]+/) { |m| m }
+      token(/(?:int|str|chr|bol|pnt|lst|if|else|else_if|for_loop|while_loop|do|print)/) { |m| m }
+      token(/[a-zA-Z_][a-zA-Z0-9_]*/) { |m| [:identifier, m] }
       token(/\d+/) { |m| m.to_i }
 
       token(/\*\*=/) { '**=' }
@@ -46,7 +46,24 @@ class CnAkE
         match(:statement) { |s| [s] }
       end
 
+      rule :simple_statement do
+        match("print", :expr) { |_, e| PrintStmt.new(e) }
+        match(:expr)          { |e| ExprStmt.new(e) }
+      end
       rule :statement do
+        # if-else FIRST
+        match("if", "(", :expr, ")", :simple_statement, ";", "else", :simple_statement, ";") do
+          |_, _, cond, _, then_stmt, _, _, else_stmt, _|
+          IfStmt.new(cond, then_stmt, else_stmt)
+        end
+
+        # if only
+        match("if", "(", :expr, ")", :simple_statement, ";") do
+          |_, _, cond, _, stmt, _|
+          IfStmt.new(cond, stmt)
+        end
+
+        # normal statements
         match("print", :expr, ";") { |_, e, _| PrintStmt.new(e) }
         match(:expr, ";")          { |e, _| ExprStmt.new(e) }
       end
@@ -104,6 +121,7 @@ class CnAkE
       rule :atom do
         match(Integer) { |n| NumberLiteral.new(n) }
         match(String)  { |name| VariableRef.new(name) }
+        match(Array) { |name| VariableRef.new(name[1]) if name[0] == :identifier }
         match('(', :expr, ')') { |_, e, _| e }
       end
 
@@ -119,7 +137,7 @@ class CnAkE
       end
 
       rule :vari do
-        match(String)
+        match(Array) { |name| name[1] if name[0] == :identifier }
       end
 
       rule :type do

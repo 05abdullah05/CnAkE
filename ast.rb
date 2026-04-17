@@ -5,6 +5,22 @@ end
 class Stmt
 end
 
+class IfStmt < Stmt
+  def initialize(condition, then_branch, else_branch = nil)
+    @condition = condition
+    @then_branch = then_branch
+    @else_branch = else_branch
+  end
+
+  def eval(env)
+    if @condition.eval(env)
+      @then_branch.eval(env)
+    elsif @else_branch
+      @else_branch.eval(env)
+    end
+  end
+end
+
 class AssignStmt < ASTNode
   attr_reader :type, :name, :value
 
@@ -15,11 +31,10 @@ class AssignStmt < ASTNode
   end
   def eval(env)
     env[@name] = @value.eval(env)
-    puts "Assigned #{env[@name]} to variable '#{@name}' of type '#{@type}'"
-    puts env
   end
 
 end
+
 
 class CompoundAssignStmt < ASTNode
   attr_reader :name, :op, :value
@@ -29,6 +44,20 @@ class CompoundAssignStmt < ASTNode
     @op = op
     @value = value
   end
+
+  def eval(env)
+    current = env[@name]
+    value = @value.eval(env)
+
+    env[@name] = case @op
+                 when "+=" then current + value
+                 when "-=" then current - value
+                 when "*=" then current * value
+                 when "/=" then current / value
+                 when "%=" then current % value
+                 when "**=" then current ** value
+                 end
+  end
 end
 
 class ListAssignStmt < ASTNode
@@ -37,6 +66,10 @@ class ListAssignStmt < ASTNode
   def initialize(name, values)
     @name = name
     @values = values
+  end
+
+  def eval(env)
+    env[@name] = @values.map { |value| value.eval(env) }
   end
 end
 
@@ -61,8 +94,6 @@ class ExprStmt < Stmt
   end
 
   def eval(env)
-    puts "hi 69"
-    puts @expr.type + "70"
     @expr.eval(env)
   end
 end
@@ -72,9 +103,6 @@ class Program
     @statements = statements
   end
   def eval(env)
-    
-    puts "ruhroh"
-    puts env
     @statements.each { |s| s.eval(env) }
   end
 end
