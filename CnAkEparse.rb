@@ -106,6 +106,7 @@ class Parser
 
   def initialize(language_name, &block)
     @logger = Logger.new(STDOUT)
+    @logger.level = Logger::WARN
     @lex_tokens = []
     @rules = {}
     @start = nil

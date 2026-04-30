@@ -22,6 +22,81 @@ class IfStmt < Stmt
   end
 end
 
+class WhileStmt < Stmt
+  def initialize(condition, body)
+    @condition = condition
+    @body = body
+  end
+
+  def eval(env)
+    while @condition.eval(env)
+      @body.eval(env)
+    end
+    nil
+  end
+end
+
+class ForStmt < Stmt
+  def initialize(init_expr, condition, update_expr, body)
+    @init_expr = init_expr
+    @condition = condition
+    @update_expr = update_expr
+    @body = body
+  end
+
+  def eval(env)
+    @init_expr.eval(env)
+    while @condition.eval(env)
+      @body.eval(env)
+      @update_expr.eval(env)
+    end
+    nil
+  end
+end
+
+class FuncDefStmt < Stmt
+  attr_reader :name, :params, :body
+
+  def initialize(name, params, body)
+    @name = name
+    @params = params
+    @body = body
+  end
+
+  def eval(env)
+    env[:__functions__] ||= {}
+    env[:__functions__][@name] = self
+    nil
+  end
+end
+
+class FuncCallExpr < ASTNode
+  attr_reader :name, :args
+
+  def initialize(name, args)
+    @name = name
+    @args = args
+  end
+
+  def eval(env)
+    env[:__functions__] ||= {}
+    func = env[:__functions__][@name]
+    raise "Function #{@name} not defined" unless func
+    
+    # Create new scope for function
+    local_env = env.dup
+    
+    # Bind parameters to arguments
+    @args.each_with_index do |arg, idx|
+      param_name = func.params[idx]
+      local_env[param_name] = arg.eval(env)
+    end
+    
+    # Execute function body in local scope
+    func.body.eval(local_env)
+  end
+end
+
 class AssignStmt < ASTNode
   attr_reader :type, :name, :value
 
