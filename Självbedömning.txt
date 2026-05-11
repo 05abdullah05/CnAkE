@@ -1,0 +1,39 @@
+Självbedömning
+
+Projektet bedöms nå betyg 3
+
+Motivation för betyg 3:
+
+Vi bedömer att projektet når betyg 3 eftersom språket innehåller grundläggande funktioner för programmering:
+Variabler med olika typer (int, str)
+Aritmetiska operationer som +, -, *, /, % och **
+Jämförelseoperatorer som <, >, <=, >=, == och !=
+If-statements
+While-loopar
+For-loopar
+Funktioner
+Utskrift med print
+
+Vi valde medvetet att hålla språket enkelt och inte göra något avancerat. Målet var att skapa ett tydligt och lättförståeligt språk med grundläggande funktioner, istället för att lägga till saker som klasser eller mer komplex objektorienterad funktionalitet.
+
+Språket har därför fokus på basfunktioner inom programmering och tydlig syntax.
+
+Kodexempel:
+
+Utskrift:
+print 1+1;
+
+If-stmt:
+if (1 > 2) print 5; else print 9;
+
+Funktioner:
+func add ( a b ): 
+    print a + b; 
+;
+add ( 3 , 4 ) ;
+
+For-Loopar:
+x = 1;
+y = 5;
+for_loop ( x = 1 ; x < y ; x += 1 ) 
+print x;

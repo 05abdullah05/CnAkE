@@ -18,19 +18,16 @@ class Rule
     @logger = parser.logger
     # The name of the expressions this rule matches
     @name = name
-    # We need the parser to recursively parse sub-expressions occurring 
-    # within the pattern of the match objects associated with this rule
+    # We need the parser to recursively parse sub-expressions occurring within the pattern of the match objects associated with this rule
     @parser = parser
     @matches = []
     # Left-recursive matches
     @lrmatches = []
   end
   
-  # Add a matching expression to this rule, as in this example:
-  # The arguments to 'match' describe the constituents of this expression.
   def match(*pattern, &block)
     match = Match.new(pattern, block)
-    # If the pattern is left-recursive, then add it to the left-recursive set
+    # If the pattern is left-recursive then add it to the left-recursive set
     if pattern[0] == @name
       pattern.shift
       @lrmatches << match
@@ -40,7 +37,7 @@ class Rule
   end
   
   def parse
-    # Try non-left-recursive matches first, to avoid infinite recursion
+    # Try non-left-recursive matches first to avoid infinite recursion
     match_result = try_matches(@matches)
     return nil if match_result.nil?
     loop do
@@ -60,12 +57,10 @@ class Rule
       # pre_result is a previously available result from evaluating expressions
       result = pre_result.nil? ? [] : [pre_result]
 
-      # We iterate through the parts of the pattern, which may be e.g.
-      #   [:expr,'*',:term]
+      # We iterate through the parts of the pattern
       match.pattern.each_with_index do |token,index|
         
-        # If this "token" is a compound term, add the result of
-        # parsing it to the "result" array
+        # If this token is a compound term, add the result of parsing it to the "result" array
         if @parser.rules[token]
           result << @parser.rules[token].parse
           if result.last.nil?
@@ -74,7 +69,7 @@ class Rule
           end
           @logger.debug("Matched '#{@name} = #{match.pattern[index..-1].inspect}'")
         else
-          # Otherwise, we consume the token as part of applying this rule
+          # Else we consume the token as part of applying this rule
           nt = @parser.expect(token)
           if nt
             result << nt
@@ -99,8 +94,7 @@ class Rule
         @logger.debug("'#{@parser.string[start..@parser.pos-1]}' matched '#{@name}' and generated '#{match_result.inspect}'") unless match_result.nil?
         break
       else
-        # If this rule did not match the current token list, move
-        # back to the scan position of the last match
+        # If this rule did not match the current token list move back to the scan position of the last match
         @parser.pos = start
       end
     end
@@ -131,21 +125,18 @@ class Parser
     @tokens = []
     @string = string.clone
     until string.empty?
-      # Unless any of the valid tokens of our language are the prefix of
-      # 'string', we fail with an exception
+      # Unless any of the valid tokens of our language are the prefix of'string' we fail with an exception
       raise ParseError, "unable to lex '#{string}" unless @lex_tokens.any? do |tok|
         match = tok.pattern.match(string)
         # The regular expression of a token has matched the beginning of 'string'
         if match
           @logger.debug("Token #{match[0]} consumed")
-          # Also, evaluate this expression by using the block
-          # associated with the token
+          # Also evaluate this expression by using the block associated with the token
           @tokens << tok.block.call(match.to_s) if tok.block
-          # consume the match and proceed with the rest of the string
+          # Consume the match and proceed with the rest of the string
           string = match.post_match
           true
         else
-          # this token pattern did not match, try the next
           false
         end # if
       end # raise
@@ -153,18 +144,17 @@ class Parser
   end
   
   def parse(string)
-    # First, split the string according to the "token" instructions given.
-    # Afterwards @tokens contains all tokens that are to be parsed. 
+    # Split the string according to the token instructions
+    # Then @tokens contains all tokens that are to be parsed
     tokenize(string)
 
-    # These variables are used to match if the total number of tokens
-    # are consumed by the parser
+    # These variables are used to match if the total number of tokens are consumed by the parser
     @pos = 0
     @max_pos = 0
     @expected = []
-    # Parse (and evaluate) the tokens received
+    # Parse and evaluate the tokens received
     result = @start.parse
-    # If there are unparsed extra tokens, signal error
+    # If there are unparsed extra tokens send error
     if @pos != @tokens.size
       raise ParseError, "Parse error. expected: '#{@expected.join(', ')}', found '#{@tokens[@max_pos]}'"
     end
@@ -271,7 +261,7 @@ class CnAkE
       rule :function do
         match(:type, 'func', :vari,'(',:expr,')') {|_, _, _, _, a,_| a}
       end
-#smile
+
       rule :expr do
         match(:type, :vari, '=', :expr) { |a, b, _, c|
           var[b] = case a

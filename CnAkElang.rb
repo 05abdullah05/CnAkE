@@ -9,8 +9,7 @@ class CnAkE
 
     @CnAkEParser = Parser.new("CnAkE") do
 
-      # ---------------- TOKENS ----------------
-
+      # TOKENS
       token(/([a-z]{3})(func)([a-z]+)(([a-z]{3})([a-z]+))/)
       token(/\s+/)
       token(/(?:int|str|chr|bol|pnt|if|else|else_if|for_loop|func|print)/) { |m| m }
@@ -36,8 +35,7 @@ class CnAkE
 
       token(/./)     { |m| m }
       
-      # ---------------- PROGRAM STRUCTURE ----------------
-
+      # PROGRAM STRUCTURE 
       start :program do
         match(:statements) { |s| Program.new(s) }
       end
@@ -58,19 +56,16 @@ class CnAkE
           FuncDefStmt.new(name, params, Program.new(body))
         end
 
-        # if-else FIRST
         match("if", "(", :expr, ")", :simple_statement, ";", "else", :simple_statement, ";") do
           |_, _, cond, _, then_stmt, _, _, else_stmt, _|
           IfStmt.new(cond, then_stmt, else_stmt)
         end
 
-        # if only
         match("if", "(", :expr, ")", :simple_statement, ";") do
           |_, _, cond, _, stmt, _|
           IfStmt.new(cond, stmt)
         end
 
-        # simple C-style for loop
         match("for_loop", "(", :expr, ";", :expr, ";", :expr, ")", :simple_statement, ";") do
           |_, _, init_expr, _, condition, _, update_expr, _, body, _|
           ForStmt.new(init_expr, condition, update_expr, body)
@@ -86,8 +81,7 @@ class CnAkE
         match(:vari) { |v| [v] }
       end
 
-      # ---------------- EXPRESSIONS ----------------
-
+      # EXPRESSIONS
       rule :expr do
 
         # variable declaration assignment
@@ -95,7 +89,6 @@ class CnAkE
           AssignStmt.new(type, name, value)
         end
 
-        # plain assignment
         match(:vari, '=', :expr) do |name, _, value|
           AssignStmt.new(nil, name, value)
         end
@@ -142,12 +135,12 @@ class CnAkE
       end
 
       rule :atom do
-        # function call
+        # function call with arguments
         match(:vari, "(", :arg_list, ")") do |name, _, args, _|
           FuncCallExpr.new(name, args)
         end
 
-        # function call with no args
+        # function call with no arguments
         match(:vari, "(", ")") do |name, _, _|
           FuncCallExpr.new(name, [])
         end
@@ -163,7 +156,7 @@ class CnAkE
         match(:expr) { |e| [e] }
       end
 
-      # ---------------- LISTS ----------------
+      # LISTS 
 
       rule :cage do
         match(:list)
