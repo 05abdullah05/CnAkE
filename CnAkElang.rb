@@ -1,6 +1,5 @@
 #!/usr/bin/env ruby
 class CnAkE
-  #smile
   def self.slither(times, sides)
     (1..times).inject(0) { |sum, _| sum + rand(sides) + 1 }
   end
@@ -93,11 +92,6 @@ class CnAkE
           AssignStmt.new(nil, name, value)
         end
 
-        # list assignment
-        match('lst', :vari, '=', :cage) do |_, name, _, values|
-          ListAssignStmt.new(name, values)
-        end
-
         # binary operators
         match(:expr, '+', :term)  { |a, _, b| BinaryExpr.new(a, "+", b) }
         match(:expr, '-', :term)  { |a, _, b| BinaryExpr.new(a, "-", b) }
@@ -155,18 +149,7 @@ class CnAkE
         match(:arg_list, ",", :expr) { |a, _, b| a + [b] }
         match(:expr) { |e| [e] }
       end
-
-      # LISTS 
-
-      rule :cage do
-        match(:list)
-      end
-
-      rule :list do
-        match(:list, ',', :atom) { |a, _, b| a + [b] }
-        match(:atom) { |a| [a] }
-      end
-
+      
       rule :vari do
         match(Array) { |name| name[1] if name[0] == :identifier }
       end

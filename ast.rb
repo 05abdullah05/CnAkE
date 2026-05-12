@@ -22,20 +22,6 @@ class IfStmt < Stmt
   end
 end
 
-class WhileStmt < Stmt
-  def initialize(condition, body)
-    @condition = condition
-    @body = body
-  end
-
-  def eval(env)
-    while @condition.eval(env)
-      @body.eval(env)
-    end
-    nil
-  end
-end
-
 class ForStmt < Stmt
   def initialize(init_expr, condition, update_expr, body)
     @init_expr = init_expr
@@ -135,20 +121,6 @@ class CompoundAssignStmt < ASTNode
                  end
   end
 end
-
-class ListAssignStmt < ASTNode
-  attr_reader :name, :values
-
-  def initialize(name, values)
-    @name = name
-    @values = values
-  end
-
-  def eval(env)
-    env[@name] = @values.map { |value| value.eval(env) }
-  end
-end
-
 
 class PrintStmt < Stmt
   def initialize(expr)
