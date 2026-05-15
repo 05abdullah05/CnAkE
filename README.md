@@ -1,3 +1,2 @@
 Användning av språket:
-Språket körs i irb med Ruby. I interpreterläget skriv "require './CnAkEparse.rb'" om filen ligger i nuvarande directory, sedan "CnAkE.new.slither" för att vara i språket.
-#smile
+Språket körs i irb med Ruby. I interpreterläget skriv "require './CnAkEparse.rb'" om filen ligger i nuvarande directory, sedan "CnAkE.new.slither("")" för att vara i språket. Detta kommer köra "test.CSE" filen. För att köra tester körs "ruby CnAkE_test.rb" i nuvarande directory.

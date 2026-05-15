@@ -164,15 +164,18 @@ class CnAkE
     end
   end
 
-  def slither
+  def slither(glorp)
     env = {}
-    program_text = File.read("./test.txt")
-
+    program_text = File.read("./test.CSE")
+    if glorp.empty?
+      program = @CnAkEParser.parse(program_text)
+    else
+      program = @CnAkEParser.parse(glorp)
+    end
     print "[CnAkE] "
-    program = @CnAkEParser.parse(program_text)
+
     program.eval(env)
   end
 end
-
 #Regex for fucntion:^([a-z]{3}) (func) ([a-z]+)(([a-z]{3}) ([a-z]+|\w+\w+),?\s?)
 # token(/([a-z]{3})\s([a-z]+)\s=\s(\d+.\d+|\d+|"[a-zA-z]+*"|[a-zA-Z]+)/) {|m| m}

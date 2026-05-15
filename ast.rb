@@ -129,10 +129,12 @@ class PrintStmt < Stmt
 
   def eval(env)
 
-    value = @expr.eval(env)
-    puts value
-
-    nil
+    @value = @expr.eval(env)
+    puts @value
+    return @value
+  end
+  def inspect
+    @value.inspect
   end
 end
 
@@ -165,10 +167,11 @@ class NumberLiteral < ASTNode
 
   def eval(env)
     @value
+    return @value
   end
 
   def inspect
-    "Number(#{@value})"
+    @value
   end
 end
 
