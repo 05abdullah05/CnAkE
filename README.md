@@ -1,7 +1,7 @@
 # CnAkE — Getting Started
 CnAkE is a simple programming language created by Abdullah and Emil to make programming concepts more approachable for beginners. The language was designed from scratch with its own syntax and grammar and implemented in Ruby using an interpreter. This project explores the design, parsing, and implementation of a programming language while keeping CnAkE easy to understand and experiment with.
 
-# This repository contains a small language/runtime called CnAkE implemented in Ruby.
+## This repository contains a small language/runtime called CnAkE implemented in Ruby.
 
 Prerequisites
 - Install Ruby (on Debian/Ubuntu):
